@@ -1,0 +1,57 @@
+from transformers import pipeline
+
+# ---------- Sentiment Analysis ----------
+
+# Load the pre-trained sentiment analysis model
+sentiment_analyzer = pipeline("sentiment-analysis")
+
+# Input reviews
+reviews = [
+    "The new smartphone has an amazing camera and battery life!",
+    "The delivery was late and the packaging was damaged."
+]
+
+# Analyze each review
+for review in reviews:
+    result = sentiment_analyzer(review)[0]
+
+    print(
+        f"Review: {review}\n"
+        f" -> {result['label']} ({round(result['score'], 3)})\n"
+    )
+
+
+# ---------- Document Classification (Zero-Shot) ----------
+
+# Load the zero-shot classification model
+classifier = pipeline(
+    "zero-shot-classification",
+    model="facebook/bart-large-mnli"
+)
+
+# Input document
+document = "The central bank raised interest rates to control rising inflation."
+
+# Candidate categories
+candidate_labels = [
+    "Politics",
+    "Economy",
+    "Sports",
+    "Technology"
+]
+
+# Perform classification
+classification = classifier(
+    document,
+    candidate_labels
+)
+
+# Display classification results
+print("Document:", document)
+print("\nClassification Results:")
+
+for label, score in zip(
+    classification["labels"],
+    classification["scores"]
+):
+    print(f"{label}: {round(score, 3)}")
