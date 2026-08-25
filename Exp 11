@@ -1,0 +1,72 @@
+from transformers import pipeline
+from diffusers import StableDiffusionPipeline
+from gtts import gTTS
+import torch
+
+# ---------- Topic ----------
+
+topic = "The benefits of renewable energy"
+
+
+# ---------- 1. Text Generation ----------
+
+text_generator = pipeline(
+    "text2text-generation",
+    model="google/flan-t5-base"
+)
+
+text_prompt = f"Write a short, engaging paragraph about: {topic}"
+
+generated_text = text_generator(
+    text_prompt,
+    max_new_tokens=80,
+    do_sample=False
+)[0]["generated_text"]
+
+print("Generated Text:")
+print(generated_text)
+
+
+# ---------- 2. Image Generation ----------
+
+image_prompt = f"An illustration representing {topic}, digital art"
+
+# Select device
+if torch.cuda.is_available():
+    device = "cuda"
+    dtype = torch.float16
+else:
+    device = "cpu"
+    dtype = torch.float32
+
+# Load Stable Diffusion
+sd_pipe = StableDiffusionPipeline.from_pretrained(
+    "runwayml/stable-diffusion-v1-5",
+    torch_dtype=dtype
+)
+
+sd_pipe = sd_pipe.to(device)
+
+# Generate image
+image = sd_pipe(
+    image_prompt,
+    num_inference_steps=25,
+    guidance_scale=7.5
+).images[0]
+
+# Save image
+image.save("content_image.png")
+
+print("Image saved as content_image.png")
+
+
+# ---------- 3. Audio Generation ----------
+
+tts = gTTS(
+    text=generated_text,
+    lang="en"
+)
+
+tts.save("content_audio.mp3")
+
+print("Audio saved as content_audio.mp3")
